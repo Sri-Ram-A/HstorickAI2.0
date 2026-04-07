@@ -1,74 +1,59 @@
-// src/lib/templates/TemplateRegistry.ts
-import { Composition } from 'remotion';
-import { VideoScene } from '../schemas/videoSchemas';
+// lib/templates/TemplateRegistry.ts
 
-// Import your template components (we'll create these next)
-import { IntroductionFrame } from "@/components/templates/IntroductionFrame";
-// import { TimelineFrame } from '../../components/templates/TimelineFrame';
-// import { MapFrame } from '../../components/templates/MapFrame';
-// import { NewspaperFrame } from '../../components/templates/NewspaperFrame';
+type TemplateLoader = () => Promise<{ default: React.ComponentType<any> }>;
 
-// Define what a template looks like in the registry
-export interface TemplateDefinition {
-  component: React.ComponentType<any>;
-  schema: any; // Zod schema for validation
-  defaultDuration: number;
-  description: string;
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// Create the registry mapping template names to their components
 export class TemplateRegistry {
-  private templates: Map<string, TemplateDefinition>;
-  
+  private templates: Map<string, TemplateLoader>;
+
   constructor() {
     this.templates = new Map();
     this.initializeTemplates();
   }
-  
+
   private initializeTemplates(): void {
-    // Register each template type
-    this.templates.set("introduction", {
-      component: IntroductionFrame,
-      schema: null, // We'll link schema later
-      defaultDuration: 180, // 6 seconds at 30fps
-      description: "Opening scene with title and historical context",
+    // Register templates with dynamic imports
+    const templateNames = ["introduction",];
+    templateNames.forEach((name) => {
+      this.templates.set(name, () =>
+        import(`@/components/templates/${capitalize(name)}Frame`)
+      );
     });
-    
-    // this.templates.set("timeline", {
-    //   component: TimelineFrame,
-    //   schema: null,
-    //   defaultDuration: 300, // 10 seconds
-    //   description: "Chronological display of key events",
-    // });
-    
-    // this.templates.set("map", {
-    //   component: MapFrame,
-    //   schema: null,
-    //   defaultDuration: 240, // 8 seconds
-    //   description: "Geographical visualization with location markers",
-    // });
-    
-    // this.templates.set("newspaper", {
-    //   component: NewspaperFrame,
-    //   schema: null,
-    //   defaultDuration: 180, // 6 seconds
-    //   description: "Historical newspaper headline style",
-    // });
   }
-  
-  public getTemplate(templateName: string): TemplateDefinition | undefined {
+
+  // Returns the loader (not component)
+  public getTemplateLoader(templateName: string): TemplateLoader | undefined {
     return this.templates.get(templateName);
   }
-  
+
+  // Async: resolves actual component
+  public async getTemplateComponent(
+    templateName: string
+  ): Promise<React.ComponentType<any> | undefined> {
+    const loader = this.templates.get(templateName);
+    if (!loader) return undefined;
+    const mod = await loader();
+    return mod.default;
+  }
+
   public getAllTemplateNames(): string[] {
     return Array.from(this.templates.keys());
   }
-  
-  public getTemplateComponent(templateName: string): React.ComponentType<any> | undefined {
-    const template = this.templates.get(templateName);
-    return template ? template.component : undefined;
-  }
 }
 
-// Create a singleton instance
+// Singleton
 export const templateRegistry = new TemplateRegistry();
+
+//// How to use in any file ?
+// const [Component, setComponent] = React.useState<React.ComponentType<any> | null>(null);
+// React.useEffect(() => {
+//   const load = async () => {
+//     const comp = await templateRegistry.getTemplateComponent("introduction");
+//     if (comp) setComponent(() => comp);
+//   };
+//   load();
+// }, []);
+// return Component ? <Component /> : <div>Loading...</div>;

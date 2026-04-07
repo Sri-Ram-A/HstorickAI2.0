@@ -1,7 +1,10 @@
-// src/lib/templates/BaseTemplate.tsx
+// lib/templates/BaseTemplate.tsx
+// Purpose: A phonebook that maps template names (like "introduction") 
+// to actual React components.
 import React from 'react';
 import { useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
-
+// Purpose: A parent component that all other templates inherit from. 
+// Provides common animations and styling.
 interface BaseTemplateProps {
   children: React.ReactNode;
   backgroundColor?: string;

@@ -1,56 +1,31 @@
 // src/remotion/HistoryVideo/Main.tsx
-import React from 'react';
-import { Sequence, Series } from 'remotion';
-import { VideoPlan, VideoScene } from '@/lib/schemas/videoSchemas';
-import { templateRegistry } from '@/lib/templates/TemplateRegistry';
-import { IntroductionFrame } from '@/components/templates/IntroductionFrame';
 
-interface MainProps {
-  videoPlan: VideoPlan;
-}
+import React from "react";
+import { Sequence } from "remotion";
+import { VideoPlan, VideoScene } from "@/lib/schemas/videoSchemas";
+import { SceneRenderer } from "./SceneRenderer";
 
-export function Main(props: MainProps): React.ReactElement {
-  const { videoPlan } = props;
-  
-  // Helper function to render a scene based on its template
-  function renderScene(scene: VideoScene): React.ReactElement {
-    const TemplateComponent = templateRegistry.getTemplateComponent(scene.templateName);
-    
-    if (!TemplateComponent) {
-      return (
-        <div style={{ backgroundColor: 'red', color: 'white', padding: '20px' }}>
-          Error: Template "{scene.templateName}" not found
-        </div>
-      );
-    }
-    
-    // Pass the params to the template component
-    return <TemplateComponent {...scene.params} />;
-  }
-  
-  // Calculate running total of frames for sequencing
+export function Main(props: VideoPlan): React.ReactElement {
+  const { topic , scenes } = props;
   let currentFrame = 0;
   const sceneSequences: React.ReactElement[] = [];
-  
-  for (let i = 0; i < videoPlan.scenes.length; i++) {
-    const scene = videoPlan.scenes[i];
-    const sceneDuration = scene.durationInFrames;
-    
+
+  for (let i = 0; i < scenes.length; i++) {
+    const scene = scenes[i];
+    const sceneDuration = 120//_frames per scene, can be dynamic based on content length or type;
     sceneSequences.push(
       <Sequence
         key={scene.sceneId}
         from={currentFrame}
         durationInFrames={sceneDuration}
       >
-        {renderScene(scene)}
+        <SceneRenderer scene={scene} />
       </Sequence>
     );
-    
     currentFrame += sceneDuration;
   }
-  
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div style={{ width: "100%", height: "100%", position: "relative" }}>
       {sceneSequences}
     </div>
   );

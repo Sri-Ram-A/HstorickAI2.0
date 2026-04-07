@@ -1,8 +1,9 @@
 // src/components/templates/IntroductionFrame.tsx
 import React from 'react';
-import { AbsoluteFill, Sequence, useCurrentFrame, interpolate } from 'remotion';
+import { Sequence, useCurrentFrame, interpolate } from 'remotion';
 import { BaseTemplate } from '@/lib/templates/BaseTemplate';
-
+import { IntroductionSceneSchema } from "@/lib/schemas/videoSchemas";
+import { z } from 'zod';
 interface IntroductionFrameProps {
   title: string;
   subtitle?: string;
@@ -10,7 +11,7 @@ interface IntroductionFrameProps {
   mood?: "serious" | "dramatic" | "educational";
 }
 
-export function IntroductionFrame(props: IntroductionFrameProps): React.ReactElement {
+export default function IntroductionFrame(props: z.infer<typeof IntroductionSceneSchema.shape.params>): React.ReactElement {
   const frame = useCurrentFrame();
   
   // Different colors based on mood

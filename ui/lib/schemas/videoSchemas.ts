@@ -1,13 +1,13 @@
-// src/lib/schemas/videoSchemas.ts
-
+// lib/schemas/videoSchemas.ts
+// Purpose: Defines the "rules" for what valid video data looks like.
 import { z } from 'zod';
 
 // Base schema that all video scenes must have
 export const BaseSceneSchema = z.object({
-    sceneId: z.string().uuid(),
+    sceneId: z.string(), // Unique identifier for each scene
     templateName: z.string(),
-    durationInFrames: z.number().int().min(30).max(900), // 1-30 seconds at 30fps
-    startFrame: z.number().int().min(0).optional(),
+    // Params can be any shape, but must be an object
+    params: z.record(z.string(), z.any()),
 });
 
 // Schema for Introduction type scenes
@@ -62,23 +62,16 @@ export const NewspaperSceneSchema = BaseSceneSchema.extend({
     }),
 });
 
-// Union type - a scene can be any of the above
 export const VideoSceneSchema = z.discriminatedUnion("templateName", [
     IntroductionSceneSchema,
     TimelineSceneSchema,
     MapSceneSchema,
     NewspaperSceneSchema,
-]);
-
+])
 // Complete video schema
 export const VideoPlanSchema = z.object({
     topic: z.string(),
-    totalDurationInFrames: z.number().int(),
     scenes: z.array(VideoSceneSchema),
-    metadata: z.object({
-        generatedAt: z.string().datetime(),
-        aiModel: z.string().optional(),
-    }).optional(),
 });
 
 // Export TypeScript types inferred from schemas

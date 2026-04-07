@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Player } from "@remotion/player";
 import type { NextPage } from "next";
 import { useMemo, useState, useEffect, useCallback } from "react";
@@ -13,29 +12,21 @@ import {
   VIDEO_HEIGHT,
   VIDEO_WIDTH,
 } from "@/types/constants";
-import { RenderControls } from "@/components/remotion/RenderControls";
 import { Main } from "../Main";
 import { useTheme } from "next-themes";
 import { VideoOrchestrator } from "@/lib/orchestrator/VideoOrchestrator";
 import { VideoPlan, VideoPlanSchema } from "@/lib/schemas/videoSchemas";
 
-// Extended props that include the video plan
-interface ExtendedCompositionProps extends z.infer<typeof CompositionProps> {
-  videoPlan: VideoPlan | null;
-}
-
 const Home: NextPage = () => {
   // State for text input
   const [text, setText] = useState<string>(defaultMyCompProps.title);
-  
   // State for video generation
   const [videoPlan, setVideoPlan] = useState<VideoPlan | null>(null);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState<boolean>(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
-  
   // Theme management
   const { setTheme, theme } = useTheme();
-  
+
   // Initialize orchestrator
   const orchestrator = useMemo(() => new VideoOrchestrator(), []);
 
@@ -44,17 +35,17 @@ const Home: NextPage = () => {
     // Reset states
     setIsGeneratingVideo(true);
     setGenerationError(null);
-    
+
     try {
       console.log("Generating video for prompt:", prompt);
       const plan = await orchestrator.generateVideoPlan(prompt);
-      
+
       // Validate the plan before setting it
       const validationResult = VideoPlanSchema.safeParse(plan);
       if (!validationResult.success) {
         throw new Error(`Invalid video plan generated: ${validationResult.error.message}`);
       }
-      
+
       setVideoPlan(plan);
       console.log("Video generated successfully:", plan);
     } catch (error) {
@@ -82,14 +73,6 @@ const Home: NextPage = () => {
     }
   };
 
-  // Prepare input props for the player
-  const inputProps = useMemo(() => {
-    return {
-      title: text,
-      videoPlan: videoPlan,
-    };
-  }, [text, videoPlan]);
-
   // Determine if player should be visible
   const showPlayer = videoPlan !== null && !isGeneratingVideo;
   const showLoading = isGeneratingVideo;
@@ -98,7 +81,7 @@ const Home: NextPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        
+
         {/* Header Section */}
         <header className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -158,9 +141,9 @@ const Home: NextPage = () => {
           <div className="overflow-hidden rounded-lg shadow-xl bg-card">
             {/* Loading State */}
             {showLoading && (
-              <div 
+              <div
                 className="w-full flex flex-col items-center justify-center"
-                style={{ 
+                style={{
                   aspectRatio: `${VIDEO_WIDTH}/${VIDEO_HEIGHT}`,
                   minHeight: '400px'
                 }}
@@ -177,9 +160,9 @@ const Home: NextPage = () => {
 
             {/* Error State */}
             {showError && (
-              <div 
+              <div
                 className="w-full flex flex-col items-center justify-center bg-destructive/10"
-                style={{ 
+                style={{
                   aspectRatio: `${VIDEO_WIDTH}/${VIDEO_HEIGHT}`,
                   minHeight: '400px'
                 }}
@@ -204,8 +187,8 @@ const Home: NextPage = () => {
             {showPlayer && videoPlan && (
               <Player
                 component={Main as any}
-                inputProps={inputProps}
-                durationInFrames={videoPlan.totalDurationInFrames || DURATION_IN_FRAMES}
+                inputProps={videoPlan}
+                durationInFrames={DURATION_IN_FRAMES}
                 fps={VIDEO_FPS}
                 compositionHeight={VIDEO_HEIGHT}
                 compositionWidth={VIDEO_WIDTH}
@@ -218,9 +201,9 @@ const Home: NextPage = () => {
 
             {/* No Plan State (should not happen normally) */}
             {!showPlayer && !showLoading && !showError && (
-              <div 
+              <div
                 className="w-full flex items-center justify-center bg-muted"
-                style={{ 
+                style={{
                   aspectRatio: `${VIDEO_WIDTH}/${VIDEO_HEIGHT}`,
                   minHeight: '400px'
                 }}
@@ -231,29 +214,6 @@ const Home: NextPage = () => {
           </div>
         </section>
 
-        {/* Video Information Panel */}
-        {videoPlan && !isGeneratingVideo && (
-          <section className="mt-6 p-4 rounded-lg bg-card border border-border">
-            <h3 className="font-semibold text-foreground mb-2">Video Information</h3>
-            <div className="space-y-1 text-sm text-muted-foreground">
-              <p><span className="font-medium">Topic:</span> {videoPlan.topic}</p>
-              <p><span className="font-medium">Total Duration:</span> {(videoPlan.totalDurationInFrames / VIDEO_FPS).toFixed(1)} seconds</p>
-              <p><span className="font-medium">Number of Scenes:</span> {videoPlan.scenes.length}</p>
-              {videoPlan.metadata?.generatedAt && (
-                <p><span className="font-medium">Generated:</span> {new Date(videoPlan.metadata.generatedAt).toLocaleString()}</p>
-              )}
-            </div>
-          </section>
-        )}
-
-        {/* Render Controls (commented out but can be enabled for debugging) */}
-        {/* <section className="flex flex-col gap-4 mt-6">
-          <RenderControls
-            text={text}
-            setText={setText}
-            inputProps={inputProps}
-          />
-        </section> */}
       </div>
     </div>
   );
